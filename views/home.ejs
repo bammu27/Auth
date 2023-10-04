@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <!-- Include Bootstrap CSS -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom CSS for styling -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h4>URL Generator</h4>
+                    </div>
+                    <div class="card-body">
+                        <form action="/url" method="POST">
+                            <div class="form-group">
+                                <label for="URL">URL</label>
+                                <input type="url" class="form-control" id="URL" name="URL" required>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary btn-block">Login</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container mt-5">
+        <h1>URLs</h1>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th scope="col">Index</th>
+                    <th scope="col">URL</th>
+                    <th scope="col">Short URL</th>
+                </tr>
+            </thead>
+            <tbody>
+               
+                <% for (let i = 0; i < urls.length; i++) { %>
+                    <tr>
+                        <th scope="row"><%= i + 1 %></th>
+                        <td>
+                           
+                                <%= urls[i].fullurl %>
+                          
+                        </td>
+                        <td>
+                            
+                                <%= urls[i].shorturl %>
+                         
+                        </td>
+                    </tr>
+                <% } %>
+            </tbody>
+        </table>
+    </div>
+
+
+
+
+
+    <!-- Include Bootstrap JS (Optional) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
