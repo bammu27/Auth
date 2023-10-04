@@ -8,6 +8,7 @@ const{getuser,setuser} = require('./service/cookie')
 const url = require('./models/url')
 const bcrypt = require('bcrypt');
 const shortid = require('shortid');
+require('dotenv').config();
 
 
 
@@ -189,7 +190,7 @@ app.post('/login',async(req,res)=>{
       
 
 
-mongoose.connect('mongodb+srv://mahaveerkashetti203:6KScRNEm6GkjF8vQ@books.keaigdy.mongodb.net/?retryWrites=true&w=majority',
+mongoose.connect(process.env.MONGO_URL,
 {useNewUrlParser: true,
 useUnifiedTopology: true},
 
