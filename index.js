@@ -1,92 +1,110 @@
-const express  = require('express')
+const express = require('express');
 const mongoose = require('mongoose');
-const user = require('./models/user');
-const { name } = require('ejs');
-const{v4:uuidV4} = require('uuid')
-const cookieParser = require('cookie-parser');
-const{getuser,setuser} = require('./service/cookie')
-const url = require('./models/url')
+const session = require('express-session');
+const passport = require('passport');
+const user = require('./models/user'); // Assuming 'user' is your user model
 const bcrypt = require('bcrypt');
-const shortid = require('shortid');
+const initialize = require('./passportConfig'); // Corrected the import name
+const flash = require('connect-flash');
+
+
 require('dotenv').config();
 
-
-
 const app = express();
-
 app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
 app.set('view engine', 'ejs');
 app.set('views', __dirname + '/views');
 
+app.use(session({
+    secret: 'keyboard cat',
+    resave: false,
+    saveUninitialized: true,
+}));
 
-async  function auth (req, res, next){
-    const userId = req.cookies.uuid;
-  
-    const user = getuser(userId);
-  
-    if (user) {
-      // User exists in the session
- 
-      next();
-    } else {
-      // User not found, handle this case (e.g., redirect to login)
-      res.redirect('/login');
+
+app.use(passport.initialize());
+app.use(passport.session());
+app.use(flash());
+initialize(passport); // Corrected the function name
+
+function Authenticated(req, res, next) {
+    if (req.isAuthenticated()) {
+        return next();
     }
-  };
- 
-  
+    res.redirect('/login');
+}
+
+app.get('/', Authenticated, async (req, res) => {
+    res.render('home');
+});
+
+app.get('/signup', (req, res) => {
+    res.render('signup');
+});
+
+app.get('/login', (req, res) => {
+    res.render('login');
+});
+
+// ... (previous imports and setup)
+
+app.post('/signup', async (req, res) => {
+    const { name, email, password } = req.body;
+
+    if (!name || !email || !password) {
+        return res.send("All fields are required.");
+    }
+
+    try {
+        // Check if a user with the same email exists
+        const existingUser = await user.findOne({ email: email });
+
+        if (existingUser) {
+            return res.redirect('/login'); // Redirect to login if user already exists
+        }
+
+        // Hash the password
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Create a new user
+        const newUser = await user.create({
+            name: name,
+            email: email,
+            password: hashedPassword,
+        });
+
+        res.redirect('/');
+    } catch (error) {
+        console.error(error);
+        res.redirect('/signup');
+    }
+});
 
 
 
-
-
-app.get('/', auth,async(req, res) => {
-
- 
-    
-
-})
-
-app.get('/signup',(req,res)=>{
-    res.render('signup')
-})
-
-app.get('/login',(req,res)=>{
-    res.render('login')
-})
-
-
-
-
-app.post('/signup',async(req,res)=>{
-
+app.post('/login', passport.authenticate('local', {
+    successRedirect: '/',
+    failureRedirect: '/login',
 
    
+}));
 
- 
-})
+app.post('/logout', function(req, res, next){
+    req.logout(function(err) {
+      if (err) { return next(err); }
+      res.redirect('/');
+    });
+  });
 
-
-
-app.post('/login',async(req,res)=>{
-
-
-    
   
-     
-    })
-
-
-mongoose.connect(process.env.MONGO_URL,
-{useNewUrlParser: true,
-useUnifiedTopology: true},
-
-).then(()=>{
-    console.log('Database is connected')
-    app.listen(5000,()=>{
-        console.log('server is running on port:5000')
-    })
-}).catch((err)=>{
-    console.log('error in connecting database')
-})
+mongoose.connect(process.env.MONGO_URL, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+}).then(() => {
+    console.log('Database is connected');
+    app.listen(5000, () => {
+        console.log('Server is running on port: 5000');
+    });
+}).catch((err) => {
+    console.log('Error in connecting database');
+});
