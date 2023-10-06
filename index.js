@@ -6,9 +6,11 @@ const user = require('./models/user'); // Assuming 'user' is your user model
 const bcrypt = require('bcrypt');
 const initialize = require('./passportConfig'); // Corrected the import name
 const flash = require('connect-flash');
-
+const {googleAuth}= require('./gooleauth.js')
 
 require('dotenv').config();
+
+//_ MIDDLEWARES___________________________________________________
 
 const app = express();
 app.use(express.urlencoded({ extended: true }));
@@ -24,15 +26,37 @@ app.use(session({
 
 app.use(passport.initialize());
 app.use(passport.session());
+
 app.use(flash());
 initialize(passport); // Corrected the function name
+
+
+passport.serializeUser((user, done) => done(null, user.id));
+passport.deserializeUser((id, done) => {
+    user.findById(id)
+      .then((user) => {
+        done(null, user);
+      })
+      .catch((err) => {
+        done(err);
+      });
+  });
+
+googleAuth()
 
 function Authenticated(req, res, next) {
     if (req.isAuthenticated()) {
         return next();
     }
     res.redirect('/login');
+
+
 }
+
+//__ROUTES ___________________________________
+
+
+
 
 app.get('/', Authenticated, async (req, res) => {
     res.render('home');
@@ -46,15 +70,22 @@ app.get('/login', (req, res) => {
     res.render('login');
 });
 
-// ... (previous imports and setup)
+app.get('/google',
+  passport.authenticate('google', { scope: ['profile'] }));
+
+app.get('/google/callback', 
+  passport.authenticate('google', { failureRedirect: '/login' }),
+  function(req, res) {
+    // Successful authentication, redirect home.
+    res.redirect('/');
+  });
 
 app.post('/signup', async (req, res) => {
     const { name, email, password } = req.body;
-
-    if (!name || !email || !password) {
-        return res.send("All fields are required.");
+    if(!name||!email||!password){
+      return res.error(500).send('all fields are required')
     }
-
+   
     try {
         // Check if a user with the same email exists
         const existingUser = await user.findOne({ email: email });
@@ -96,6 +127,11 @@ app.post('/logout', function(req, res, next){
     });
   });
 
+
+
+
+
+//CONNECTION_____________________________________
   
 mongoose.connect(process.env.MONGO_URL, {
     useNewUrlParser: true,

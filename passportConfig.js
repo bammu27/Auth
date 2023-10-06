@@ -3,6 +3,7 @@ const bcrypt = require('bcrypt');
 const User = require('./models/user'); // Assuming your user model is imported correctly
 
 function initialize(passport) {
+  
   const authenticateUser = async (email, password, done) => {
     try {
       const user = await User.findOne({ email: email });
@@ -24,16 +25,7 @@ function initialize(passport) {
   };
 
   passport.use(new LocalStrategy({ usernameField: 'email' }, authenticateUser));
-  passport.serializeUser((user, done) => done(null, user.id));
-  passport.deserializeUser((id, done) => {
-    User.findById(id)
-      .then((user) => {
-        done(null, user);
-      })
-      .catch((err) => {
-        done(err);
-      });
-  });
+  
   
 }
 
